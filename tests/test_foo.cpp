@@ -10,7 +10,14 @@
 
 #include <tbb/parallel_for.h>
 
-TEST_CASE("test foo")
+TEST_CASE("foo1")
+{
+    std::atomic_int x = 0;
+    tbb::parallel_for(0, 100, [&](int i) { x += i; });
+    REQUIRE(x == 4950);
+}
+
+TEST_CASE("foo2")
 {
     std::atomic_int x = 0;
     tbb::parallel_for(0, 100, [&](int i) { x += i; });
