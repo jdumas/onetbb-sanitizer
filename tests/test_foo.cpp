@@ -6,10 +6,13 @@
  * accordance with the terms of the Adobe license agreement accompanying
  * it.
  */
-#include <foo/foo.h>
 #include <catch2/catch_test_macros.hpp>
+
+#include <tbb/parallel_for.h>
 
 TEST_CASE("test foo")
 {
-    REQUIRE(foo::foo_add(1, 2) == 3);
+    std::atomic_int x = 0;
+    tbb::parallel_for(0, 100, [&](int i) { x += i; });
+    REQUIRE(x == 4950);
 }
