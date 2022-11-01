@@ -14,7 +14,8 @@ TEST_CASE("foo1")
 {
     std::atomic_int x = 0;
     tbb::parallel_for(0, 100, [&](int i) { x += i; });
-    REQUIRE(x == 4950);
+    tbb::parallel_for(0, 100, [&](int i) { x += i; });
+    REQUIRE(x == 2*4950);
 }
 
 TEST_CASE("foo2")

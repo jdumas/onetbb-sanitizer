@@ -12,6 +12,7 @@ cmake_minimum_required(VERSION 3.20)
 project(Foo)
 
 list(PREPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+include(sanitizers)
 
 include(CTest)
 add_subdirectory(tests)
