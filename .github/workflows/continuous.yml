@@ -39,13 +39,13 @@ jobs:
             os: ubuntu-22.04
             compiler: clang
 
-          - name: macos-12
+          - name: macos-12-apple-clang
             os: macos-12
-            compiler: clang
+            compiler: apple-clang
 
-          # - name: macos-12-llvm-clang
-          #   os: macos-12
-          #   compiler: clang
+          - name: macos-12-llvm-clang
+            os: macos-12
+            compiler: llvm-clang
 
     steps:
       - name: Checkout repository
@@ -70,14 +70,19 @@ jobs:
 
       - name: Dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install ccache
+        run: |
+          brew install ccache
+          if [ "${{ matrix.compiler }}" = "llvm-clang" ]; then
+            echo "CC='$(brew --prefix llvm@16)/bin/clang'" >> $GITHUB_ENV
+            echo "CXX='$(brew --prefix llvm@16)/bin/clang++'" >> $GITHUB_ENV
+          fi
 
       - name: Cache Build
         id: cache-build
         uses: actions/cache@v3
         with:
           path: ~/.ccache
-          key: ${{ runner.os }}-${{ matrix.config }}-cache
+          key: ${{ matrix.name }}-${{ matrix.config }}-cache
 
       - name: Prepare ccache
         run: |
