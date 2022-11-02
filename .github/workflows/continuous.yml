@@ -103,7 +103,7 @@ jobs:
         run: cd build; make -j2; ccache --show-stats
 
       - name: Tests (STD Threads)
-        run: cd build; ././tests/foo_tests "[std]"
+        run: cd build; for (( c=1; c<=100; c++ )); do ./tests/foo_tests "[std]"; done
 
       - name: Tests (TBB Threads)
-        run: cd build; ././tests/foo_tests "[tbb]"
+        run: cd build; for (( c=1; c<=100; c++ )); do ./tests/foo_tests "[tbb]"; done
