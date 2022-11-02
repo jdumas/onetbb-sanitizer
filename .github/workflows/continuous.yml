@@ -71,11 +71,11 @@ jobs:
       - name: Dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install ccache
-          if [ "${{ matrix.compiler }}" = "llvm-clang" ]; then
-            echo "CC='$(brew --prefix llvm@16)/bin/clang'" >> $GITHUB_ENV
-            echo "CXX='$(brew --prefix llvm@16)/bin/clang++'" >> $GITHUB_ENV
-          fi
+            brew install ccache
+            if [ "${{ matrix.compiler }}" = "llvm-clang" ]; then
+              echo "CC='$(brew --prefix llvm@16)/bin/clang'" >> $GITHUB_ENV
+              echo "CXX='$(brew --prefix llvm@16)/bin/clang++'" >> $GITHUB_ENV
+            fi
 
       - name: Cache Build
         id: cache-build
