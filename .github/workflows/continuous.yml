@@ -102,8 +102,8 @@ jobs:
       - name: Build
         run: cd build; make -j2; ccache --show-stats
 
-      - name: Tests (TBB Threads)
-        run: cd build; ././tests/foo_tests "[tbb]"
-
       - name: Tests (STD Threads)
         run: cd build; ././tests/foo_tests "[std]"
+
+      - name: Tests (TBB Threads)
+        run: cd build; ././tests/foo_tests "[tbb]"
