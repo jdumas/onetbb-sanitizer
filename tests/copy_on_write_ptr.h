@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include <shared_ptr.hpp>
+
 #include <cassert>
 #include <memory>
 
@@ -29,15 +31,22 @@ public:
     using const_reference = typename std::add_const<T>::type&;
     using element_type = T;
 
+private:
+    template <class U>
+    using disable_copy = std::enable_if_t<!std::is_same<std::decay_t<U>, copy_on_write_ptr>::value>*;
+
 public:
-    /// Construct a copy-on-write ptr from a shared-pointer
-    copy_on_write_ptr(std::shared_ptr<T>&& ptr = nullptr)
-        : m_data(std::move(ptr))
-    {
-        if (m_data) {
-            assert(m_data.use_count() == 1);
-        }
-    }
+    /// Construct a copy-on-write ptr
+    template <class U>
+    copy_on_write_ptr(U&& x, disable_copy<U> = nullptr)
+        : m_data(smart_ptr::make_shared<T>(std::forward<U>(x)))
+    {}
+
+    /// Construct a copy-on-write ptr
+    template <class U, class V, class... Args>
+    copy_on_write_ptr(U&& x, V&& y, Args&&... args)
+        : m_data(smart_ptr::make_shared<T>(std::forward<U>(x), std::forward<V>(y), std::forward<Args>(args)...))
+    {}
 
     /// Default move constructor.
     copy_on_write_ptr(copy_on_write_ptr&&) = default;
@@ -63,13 +72,13 @@ public:
 
 protected:
     /// Shared object.
-    std::shared_ptr<T> m_data;
+    smart_ptr::shared_ptr<T> m_data;
 
     /// If we are not the owner of the shared object, make a private copy of it
     void ensure_unique_owner()
     {
         if (m_data.use_count() != 1) {
-            m_data = std::make_shared<T>(*m_data);
+            m_data = smart_ptr::make_shared<T>(*m_data);
         }
     }
 };

@@ -14,9 +14,11 @@ file(GLOB TEST_SOURCES "*.h" "*.cpp")
 add_executable(foo_tests ${TEST_SOURCES})
 
 include(onetbb)
+include(smart_ptr)
 target_link_libraries(foo_tests PUBLIC
     Catch2::Catch2WithMain
     TBB::tbb
+    smart_ptr::smart_ptr
 )
 
 catch_discover_tests(foo_tests)
