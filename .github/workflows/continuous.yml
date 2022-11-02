@@ -71,7 +71,7 @@ jobs:
         run: cd build; make -j2; ccache --show-stats
 
       - name: Tests (TBB Threads)
-        run: cd build; ././tests/foo_tests "parallel_cow_tbb"
+        run: cd build; ././tests/foo_tests "[tbb]"
 
       - name: Tests (STD Threads)
-        run: cd build; ././tests/foo_tests "parallel_cow_std"
+        run: cd build; ././tests/foo_tests "[std]"
