@@ -26,8 +26,8 @@ jobs:
         name: [
           ubuntu-22.04-gcc,
           ubuntu-22.04-clang,
-          macos-12
-          # macos-12-llvm-clang
+          macos-12-apple-clang
+          macos-12-llvm-clang
         ]
         config: [Release, Debug]
         include:
