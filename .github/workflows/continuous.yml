@@ -18,7 +18,7 @@ jobs:
   ####################
 
   Unix:
-    name: ${{ matrix.name }} (${{ matrix.config }})
+    name: ${{ matrix.name }} (${{ matrix.config }}, ${{ matrix.sanitizer }}Sanitizer)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -30,6 +30,7 @@ jobs:
           macos-12-llvm-clang
         ]
         config: [Release, Debug]
+        sanitizer: ["Address", "Thread"]
         include:
           - name: ubuntu-22.04-gcc
             os: ubuntu-22.04
@@ -46,7 +47,6 @@ jobs:
           - name: macos-12-llvm-clang
             os: macos-12
             compiler: llvm-clang
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -97,13 +97,10 @@ jobs:
           cmake .. \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
-            -DUSE_SANITIZER=Thread
+            -DUSE_SANITIZER=${{ matrix.sanitizer }}
 
       - name: Build
         run: cd build; make -j2; ccache --show-stats
 
-      - name: Tests (STD Threads)
-        run: cd build; for (( c=1; c<=100; c++ )); do ./tests/foo_tests "[std]"; done
-
-      - name: Tests (TBB Threads)
-        run: cd build; for (( c=1; c<=100; c++ )); do ./tests/foo_tests "[tbb]"; done
+      - name: Tests
+        run: cd build; ctest --verbose
