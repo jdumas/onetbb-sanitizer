@@ -10,7 +10,7 @@ on:
 
 env:
   CTEST_OUTPUT_ON_FAILURE: ON
-  CTEST_PARALLEL_LEVEL: 2
+  CTEST_PARALLEL_LEVEL: 1
 
 jobs:
   ####################
@@ -18,40 +18,30 @@ jobs:
   ####################
 
   Unix:
-    name: ${{ matrix.name }} (${{ matrix.config }}, ${{ matrix.sanitizer }}Sanitizer)
+    name: ${{ matrix.os }} (${{ matrix.compiler }}, ${{ matrix.config }}, ${{ matrix.sanitizer }}Sanitizer)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        name: [
-          ubuntu-22.04-gcc,
-          ubuntu-22.04-clang,
-          macos-12-apple-clang,
-          macos-12-llvm-clang
-        ]
-        config: [Release, Debug]
+        os: [ubuntu-22.04, macos-12]
+        config: [RelwithDebInfo, Debug]
+        compiler: [gcc, apple, llvm]
         sanitizer: ["Address", "Thread"]
-        include:
-          - name: ubuntu-22.04-gcc
-            os: ubuntu-22.04
+        exclude:
+          - os: macos-12
+            sanitizer: "Thread"
+          - os: macos-12
             compiler: gcc
-
-          - name: ubuntu-22.04-clang
-            os: ubuntu-22.04
-            compiler: clang
-
-          - name: macos-12-apple-clang
-            os: macos-12
-            compiler: apple-clang
-
-          - name: macos-12-llvm-clang
-            os: macos-12
-            compiler: llvm-clang
+          - os: ubuntu-22.04
+            compiler: apple
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 10
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
 
       - name: Dependencies (Linux)
         if: runner.os == 'Linux'
@@ -66,17 +56,21 @@ jobs:
               echo "CC=clang" >> $GITHUB_ENV
               echo "CXX=clang++" >> $GITHUB_ENV
             fi
-            sudo apt-get install ccache
+            sudo apt-get install xorg-dev ccache
 
       - name: Dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
             brew install ccache
-            if [ "${{ matrix.compiler }}" = "llvm-clang" ]; then
+            if [ "${{ matrix.compiler }}" = "llvm" ]; then
               brew install llvm@15
               echo "CC='$(brew --prefix llvm@15)/bin/clang'" >> $GITHUB_ENV
               echo "CXX='$(brew --prefix llvm@15)/bin/clang++'" >> $GITHUB_ENV
             fi
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v1
+        id: cpu-cores
 
       - name: Cache Build
         id: cache-build
@@ -94,13 +88,16 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake .. \
+          cmake .. -G Ninja \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
             -DUSE_SANITIZER=${{ matrix.sanitizer }}
 
       - name: Build
-        run: cd build; make -j2; ccache --show-stats
+        run: |
+          cmake --build build -j ${{ steps.cpu-cores.outputs.count }}
+          ccache --show-stats
 
       - name: Tests
-        run: cd build; ctest --verbose
+        run: cd build; ctest --verbose -j ${{ steps.cpu-cores.outputs.count }}
+

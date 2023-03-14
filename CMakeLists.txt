@@ -20,5 +20,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 list(PREPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(sanitizers)
 
+include(openvdb)
+file(GLOB_RECURSE INC_FILES "src/*.h")
+file(GLOB_RECURSE SRC_FILES "src/*.cpp")
+add_library(mylib ${INC_FILES} ${SRC_FILES})
+add_library(mylib::mylib ALIAS mylib)
+target_include_directories(mylib PUBLIC src)
+target_link_libraries(mylib PUBLIC openvdb::openvdb)
+
 include(CTest)
 add_subdirectory(tests)

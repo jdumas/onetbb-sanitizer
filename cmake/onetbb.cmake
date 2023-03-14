@@ -25,27 +25,56 @@ include(FetchContent)
 FetchContent_Declare(
     tbb
     GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
-    GIT_TAG v2021.7.0
-    GIT_SHALLOW TRUE
+    GIT_TAG v2021.8.0
 )
 
 option(TBB_TEST "Enable testing" OFF)
 option(TBB_EXAMPLES "Enable examples" OFF)
-option(TBB_STRICT "Treat compiler warnings as errors" ON)
+option(TBB_STRICT "Treat compiler warnings as errors" OFF)
 option(TBB_PREFER_STATIC "Use the static version of TBB for the alias target" ON)
 unset(TBB_DIR CACHE)
 
-set(OLD_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
-if(TBB_PREFER_STATIC)
-    set(BUILD_SHARED_LIBS OFF CACHE STRING "Build shared library" FORCE)
-else()
-    set(BUILD_SHARED_LIBS ON CACHE STRING "Build shared library" FORCE)
-endif()
+function(onetbb_import_target)
+    macro(onetbb_push_variable var value)
+        if(DEFINED CACHE{${var}})
+            set(ONETBB_OLD_${var}_VALUE "${${var}}")
+            set(ONETBB_OLD_${var}_TYPE CACHE_TYPE)
+        elseif(DEFINED ${var})
+            set(ONETBB_OLD_${var}_VALUE "${${var}}")
+            set(ONETBB_OLD_${var}_TYPE NORMAL_TYPE)
+        else()
+            set(ONETBB_OLD_${var}_TYPE NONE_TYPE)
+        endif()
+        set(${var} "${value}" CACHE PATH "" FORCE)
+    endmacro()
 
-set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME tbb)
-FetchContent_MakeAvailable(tbb)
+    macro(onetbb_pop_variable var)
+        if(ONETBB_OLD_${var}_TYPE STREQUAL CACHE_TYPE)
+            set(${var} "${ONETBB_OLD_${var}_VALUE}" CACHE PATH "" FORCE)
+        elseif(ONETBB_OLD_${var}_TYPE STREQUAL NORMAL_TYPE)
+            unset(${var} CACHE)
+            set(${var} "${ONETBB_OLD_${var}_VALUE}")
+        elseif(ONETBB_OLD_${var}_TYPE STREQUAL NONE_TYPE)
+            unset(${var} CACHE)
+        else()
+            message(WARNING "ONETBB_OLD_${var}_TYPE: ${ONETBB_OLD_${var}_TYPE}")
+            message(FATAL_ERROR "Trying to pop a variable that has not been pushed: ${var}")
+        endif()
+    endmacro()
 
-set(BUILD_SHARED_LIBS ${OLD_BUILD_SHARED_LIBS} CACHE STRING "Build shared library" FORCE)
+    if(TBB_PREFER_STATIC)
+        onetbb_push_variable(BUILD_SHARED_LIBS OFF)
+    else()
+        onetbb_push_variable(BUILD_SHARED_LIBS ON)
+    endif()
+
+    set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME tbb)
+    FetchContent_MakeAvailable(tbb)
+
+    onetbb_pop_variable(BUILD_SHARED_LIBS)
+endfunction()
+
+onetbb_import_target()
 
 if(NOT TARGET TBB::tbb)
     message(FATAL_ERROR "TBB::tbb is still not defined!")
