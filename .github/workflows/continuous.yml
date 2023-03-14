@@ -95,7 +95,7 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build build -j ${{ steps.cpu-cores.outputs.count }}
+          cmake --build build -j ${{ steps.cpu-cores.outputs.count }} -- -k 0
           ccache --show-stats
 
       - name: Setup tmate session
