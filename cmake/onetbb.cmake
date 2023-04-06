@@ -31,7 +31,8 @@ FetchContent_Declare(
 option(TBB_TEST "Enable testing" OFF)
 option(TBB_EXAMPLES "Enable examples" OFF)
 option(TBB_STRICT "Treat compiler warnings as errors" OFF)
-option(TBB_PREFER_STATIC "Use the static version of TBB for the alias target" ON)
+option(TBB_PREFER_STATIC "Use the static version of TBB for the alias target" OFF)
+option(TBB_BUILD_TBBMALLOC  "Build TBB malloc library"  ON)
 unset(TBB_DIR CACHE)
 
 function(onetbb_import_target)
